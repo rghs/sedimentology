@@ -16,3 +16,4 @@ Relevant literature cited in files drawing from it - please cite your sources!
   - cart2sph
   - fisherMean
   - intersect
+- planeintersect.c: a C program taking dip azimuth and dip readings of planes on the command line and calculating their intersection. Probably not hugely useful in and of itself but could be cannibalised into something else (I'd imagine).
