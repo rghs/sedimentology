@@ -15,6 +15,8 @@ Sources:
         method using fractal geometry
     - Allmendinger et al., 2012: Structural geology algorithms: vectors and
         tensors
+        DOI: 10.1017/CBO9780511920202
+    - Fisher et al., 1987: Statistical Analysis of Spherical Data
 """
 
 #%% Import packages
