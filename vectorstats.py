@@ -11,8 +11,6 @@ for all kinds of things besides.
 Sources:
     - Curray, 1956: The Analysis of Two-Dimensional Orientation Data,
         DOI: 10.1086/626329
-    - Ghosh, 2000: Estimation of channel sinuosity from paleocurrent data: a
-        method using fractal geometry
     - Allmendinger et al., 2012: Structural geology algorithms: vectors and
         tensors
         DOI: 10.1017/CBO9780511920202
@@ -221,10 +219,9 @@ def cart2sph(cn, ce, cd, degrees = True):
 #%% Curray, 1956 - circular vector mean
 ### Also includes calculation of sinuosity by relation found in Ghosh, 2000
 
-def currayMean(az, numbins, localities = None, sinuosity = False):
+def currayMean(az, numbins, localities = None):
     '''
     Calculates circular vector mean after Curray, 1956.
-    Optionally calculates paleosinuosity after Ghosh, 2000
 
     Parameters
     ----------
@@ -236,16 +233,11 @@ def currayMean(az, numbins, localities = None, sinuosity = False):
         Array containing values for site measurements were collected at.
         Must be of identical length to az. Can be omitted if only one locality
         is being calculated.
-    sinuosity : bool, optional
-        Calculate paleosinuosity after Ghosh, 2000. The default is False.
 
     Returns
     -------
     results : pandas dataframe
         Statistics calculated during calculation of vector mean +/- sinuosity.
-    np.array(results.gamma) : float array
-        Array of mean vectors, returned when verbose = False.
-
     '''
     if(localities is None):
         localities = []
@@ -256,8 +248,6 @@ def currayMean(az, numbins, localities = None, sinuosity = False):
     # Raise exceptions for bad data
     if any(y >= 360 for y in az) or any(y < 0 for y in az):
         raise Exception('Array contains values outside range 0 <= x < 360.')
-    if(type(sinuosity) != bool):
-        raise Exception('Argument "sinuosity" must be provided with bool value.')
         
     # Build bins
     bins = np.linspace(0, 360, numbins, endpoint = False)
@@ -284,7 +274,7 @@ def currayMean(az, numbins, localities = None, sinuosity = False):
                                 'W':np.zeros(len(arealist)),
                                 'V':np.zeros(len(arealist)),
                                 'gamma':np.zeros(len(arealist)),
-                                'R':np.zeros(len(arealist)),
+                                'r':np.zeros(len(arealist)),
                                 'L':np.zeros(len(arealist))})
         
         for j in range(0,len(arealist)):
@@ -305,7 +295,7 @@ def currayMean(az, numbins, localities = None, sinuosity = False):
                 results.loc[j, 'gamma'] = math.degrees(math.atan2(sum(vec.w_comp),sum(vec.v_comp)))
             else:
                 results.loc[j, 'gamma'] = 360 + math.degrees(math.atan2(sum(vec.w_comp),sum(vec.v_comp)))
-            results.loc[j, 'R'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)
+            results.loc[j, 'r'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)
             results.loc[j, 'L'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)/len(trim.az) * 100
                         
     else:    
@@ -316,7 +306,7 @@ def currayMean(az, numbins, localities = None, sinuosity = False):
             vec.loc[i, 'v_comp'] = vec.ni[i] * math.cos(math.radians(midpoint))
             
         results = pd.DataFrame({'n':[0.0],'W':[0.0],'V':[0.0],
-                                'gamma':[0.0],'R':[0.0],'L':[0.0]})
+                                'gamma':[0.0],'r':[0.0],'L':[0.0]})
         results.loc[0, 'n'] = len(az)
         results.loc[0, 'W'] = sum(vec.w_comp)
         results.loc[0, 'V'] = sum(vec.v_comp)
@@ -324,17 +314,8 @@ def currayMean(az, numbins, localities = None, sinuosity = False):
             results.loc[0, 'gamma'] = math.degrees(math.atan(sum(vec.w_comp)/sum(vec.v_comp)))
         else:
             results.loc[0, 'gamma'] = 360 + math.degrees(math.atan(sum(vec.w_comp)/sum(vec.v_comp)))
-        results.loc[0, 'R'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)
+        results.loc[0, 'r'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)
         results.loc[0, 'L'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)/len(az) * 100
-    
-    if(sinuosity == True):
-        S = np.exp(2.49 - 0.0475 * results.L + 0.000234 * np.square(results.L))
-        S_max = np.exp(3.68 - 0.0684 * results.L + 0.00032 * np.square(results.L))
-        S_abstract = np.exp(4.2416 - 0.0801 * results.L + 0.0004 * np.square(results.L))
-        sinu = pd.DataFrame({'S': S,
-                             'S_max': S_max,
-                             'S_abstract': S_abstract})
-        results = results.join(sinu)
     
     return results
 
