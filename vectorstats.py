@@ -459,13 +459,13 @@ def intersect(az1, d1, az2, d2, poles = False):
         Plunge of plane of intersection in spherical coordinates.
 
     '''
-    if(type(poles) != bool):
+    if(type(poles) is not bool):
         raise Exception('poles needs boolean value.')
     
     dip1, dip2 = d1, d2
     
     # Convert planes to poles
-    if(poles == False):
+    if(poles is False):
         az1, d1 = pole2plane(az1, d1)
         az2, d2 = pole2plane(az2, d2)
         
@@ -592,3 +592,31 @@ def rotate(dip_az, dip, rot_ang, ax_az, ax_pln = 0, bed_az_2_ax = True, lower = 
     trend, plunge = cart2sph(r_cn, r_ce, r_cd)
     
     return trend, plunge
+
+#%% Geographic midpoint
+
+def geomid(lat,lon):
+    if((hasattr(lat, '__len__') is False) and (hasattr(lat, '__lon__') is False)):
+        warnings.warn('Need more than one point to compute average! Returning input lat and long.')
+        return lat, lon
+    
+    rlat = np.radians(lat)
+    rlon = np.radians(lon)
+    
+    x = np.mean(np.cos(rlat) * np.cos(rlon))
+    y = np.mean(np.cos(rlat) * np.sin(rlon))
+    z = np.mean(np.sin(rlat))
+    
+    if((abs(x) < 10**-9) and (abs(y) < 10**-9) and (abs(z) < 10**-9)):
+        warnings.warn('Midpoint is centre of the Earth!')
+        avlat = None
+        avlon = None
+    else:
+        avlon = math.atan2(y,x)
+        avhyp = math.sqrt(x**2 + y**2)
+        avlat = math.atan2(z, avhyp)
+        
+        avlon = math.degrees(avlon)
+        avlat = math.degrees(avlat)
+    
+    return avlat, avlon
