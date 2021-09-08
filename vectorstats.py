@@ -357,9 +357,6 @@ def fisherMean(trends, plunges, deg_in = True, deg_out = True, lower = True):
         95% uncertainty cone for vector mean.
 
     '''
-    conc = 0
-    d99 = 0
-    d95 = 0
     
     if(isinstance(trends, np.ndarray) == False):
         trends = np.array(trends)
@@ -410,6 +407,8 @@ def fisherMean(trends, plunges, deg_in = True, deg_out = True, lower = True):
                 conc = (nlines/(nlines - R)) * afact**2
             else:
                 conc = (nlines - 1)/(nlines - R)
+        else:
+            conc = np.nan
                 
         if((R_ave >= 0.65) and (R_ave < 1.0)):
             afact = 100.0
@@ -419,6 +418,9 @@ def fisherMean(trends, plunges, deg_in = True, deg_out = True, lower = True):
             d99 = math.acos(1.0 - ((nlines - R)/R) * (afact**bfact - 1.0))
             afact = 20.0
             d95 = math.acos(1.0 - ((nlines - R)/R) * (afact**bfact - 1.0))
+        else:
+            d99 = np.nan
+            d95 = np.nan
     
     # Convert output to degrees
     if(deg_out == True):
@@ -427,8 +429,9 @@ def fisherMean(trends, plunges, deg_in = True, deg_out = True, lower = True):
         d99 = math.degrees(d99)
         d95 = math.degrees(d95)
         
-    if((conc == 0) or (d99 == 0) or (d95 == 0)):
-        warnings.warn('Could not calculate Fisher statistics. Double check your results.')
+    if((np.isnan(conc)) or (np.isnan(d99)) or (np.isnan(d95))):
+        warnings.warn('Could not calculate some or all Fisher statistics. Double check your results.')
+        
     return trend_ave, plunge_ave, R_ave, conc, d99, d95
 
 #%% Intersection of planes

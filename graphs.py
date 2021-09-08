@@ -8,6 +8,8 @@ Generate graphs for various procedures and find intersection of lines.
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
+import warnings
 
 #%% Line intersect
 # Find the intersection of two straight lines by specifying two points on each
@@ -35,6 +37,19 @@ def get_intersect(a1, a2, b1, b2):
     return int_x, int_y
 
 def lerouxEAD():
+    '''
+    Generate axes for plotting the Effective Angular Deviation graph from
+    Le Roux (1994).
+
+    Returns
+    -------
+    EAD_x : np.ndarray
+        Array of 0:100 for plotting x-axis of graph.
+    EAD_y : np.ndarray
+        Array of corresponding values of effective angular deviation for plotting
+        y-axis.
+
+    '''
     EAD_x = np.arange(0,101,1)
     EAD_y = np.zeros(101)
     
@@ -64,3 +79,23 @@ def cmp(author = 1):
         cmp_y = np.array([0.15, 0.3, 0.4, 0.6, 1, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2])
     
     return cmp_x, cmp_y
+
+#%% Graph plotting
+
+def windrose(x, b_int = 10):
+    if(b_int > 10):
+        warnings.warn('Bin sizes greater than 10 produce strange looking bars. You have been warned.')
+    bins = np.arange(0,360+b_int,b_int)
+    binned = np.histogram(x, bins)[0]
+    
+    xmax = 2 * np.pi
+    x_coords = np.linspace(0, xmax, len(binned), endpoint=False)
+    width = xmax/len(bins)
+    
+    fig = plt.figure(figsize = (10,10))
+    ax = fig.add_subplot(111, polar = True)
+    ax.bar(x_coords, binned, width = width, align = 'edge')
+    ax.set_theta_direction(-1)
+    ax.set_theta_zero_location("N")
+    
+    return fig

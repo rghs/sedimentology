@@ -105,8 +105,8 @@ def leroux(L):
 
 #%% Fulcrum approach calculations, Holbrook and Wanas, 2014
 
-def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 0, depth = 0,
-            grainsize_m = False, hm_hbf = 8, ca_method = 1,
+def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
+            grainsize_m = False, hm_hbf = 8, ca_method = 'vr',
             crit_mob_param = 1, crit_mob_manual = 0):
     '''
     Performs calculations for source to sink fulcrum method as developed
@@ -130,8 +130,11 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 0, depth = 0,
         Frequency of bankfull discharge events (days).
     b : float
         Multiplier expressing proportion of sediment moved during bankfull events.
-    wc : float, optional
-        Width of the channel. Will be estimated from foreset height if left default. The default is 0.
+    wc : float or string, optional
+        Width of the channel. Accepts numerical values for measured channel widths.
+        If "single" or "braid" is provided, width will be calculated using H_bf and
+        appropriate relationships from Bridge and Mackey (1993) or Leopold and Maddock (1953).
+        The default is "single".
     grainsize_m : bool, optional
         Designates whether the grainsize is input in m (True) or mm (False). The default is False.
     hm_hbf : float, optional
@@ -139,9 +142,9 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 0, depth = 0,
         LeClair and Bridge (2001) as falling between 6 and 10. The default is 8.
     ca_method : int, optional
         Specify method used to calculate c_a as follows:
-            - 1: Wright and Parker, 2004
-            - 2: Garcia and Parker, 1991
-            - 3: Van Rijn, 1984
+            - 'wp': Wright and Parker, 2004
+            - 'gp': Garcia and Parker, 1991
+            - 'vr': Van Rijn, 1984
     large_channel : bool, optional
         Specifies whether to calculate ca using the relationship from Wright
         and Parker (2004) for large channels (True) or the standard ca
@@ -207,10 +210,16 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 0, depth = 0,
         hbf = depth
 
     # Assign channel width
-    if(wc == 0):
-        bbf = 8.8 * hbf**1.82
-    else:    
-        bbf = wc
+    try:
+        bbf = wc/1
+    except:
+        if(wc == 'single'):
+            bbf = 8.8 * hbf**1.82
+        elif(wc == 'braid'):
+            bbf = 42 * hbf**1.11
+        else:    
+            raise Exception('wc accepts numerical arguments, "single" or "braid" only.')
+    
     
     delta = hbf/8
     lam = 7.3 * hbf
@@ -227,7 +236,7 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 0, depth = 0,
     
     # Construct critical mobility space and select appropriate parameter
     if(crit_mob_manual == 0):
-        cmpx, cmpy = gr.cmp(crit_mob_param)
+        cmpx, cmpy = gr.cmp(crit_mob_param)    
         try:
             lower = np.max(np.where(cmpx <= D_st))
         except:
@@ -269,9 +278,9 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 0, depth = 0,
         
     u_st = (g * hbf * S) ** (1/2)
     
-    if((ca_method == 1) or (ca_method == 2)):
+    if((ca_method == 'wp') or (ca_method == 'gp')):
         Rep = ((R * g * d50) ** (1/2) * d50) / v
-        if(ca_method == 1):
+        if(ca_method == 'wp'):
             # Wright and Parker, 2004
             A = 5.7e-7
             Zu = (u_st/w_s) * (Rep ** 0.6) * (S ** 0.07)
@@ -280,9 +289,11 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 0, depth = 0,
             A = 1.3e-7
             Zu = (u_st/w_s) * (Rep ** 0.6)
         ca = (A * Zu ** 5)/(1 + (A/0.3) * Zu ** 5)
-    else:
+    elif(ca_method == 'vr'):
         # Van Rijn, 1984
         ca = 0.015 * (d50/a) * T**1.5/D_st**0.3
+    else:
+        raise Exception('ca_method accepts "wp","gp" or "vr" only.')
     
     beta = 1 + 2 * (w_s/u_st)**2 
     
@@ -307,7 +318,12 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 0, depth = 0,
     total_km = Qmas_km * duration
     
     # Construct results table
-    results = pd.DataFrame({'channel_width':[bbf],
+    results = pd.DataFrame({'d16':[d16],
+                            'd50':[d50],
+                            'd84':[d84],
+                            'd90':[d90],
+                            'mean_foreset_height':[sm],
+                            'channel_width':[bbf],
                             'channel_depth':[hbf],
                             'slope':[S],
                             'mean_flow_velocity':[u_bar],
@@ -316,6 +332,8 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 0, depth = 0,
                             'bankfull_suspended_discharge':[Qs],
                             'bankfull_bedload_discharge':[Q_tbf],
                             'mean_annual_sediment_discharge':[Qmas],
+                            'bankfull_interval':[tbd],
+                            'bankfull_multiplier':[b],
                             'duration':[duration],
                             'total_sediment_discharge':[total_km]})
     
