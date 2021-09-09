@@ -220,13 +220,14 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
         else:    
             raise Exception('wc accepts numerical arguments, "single" or "braid" only.')
     
+    S = (tau_bf * (R * d50))/hbf
     
     delta = hbf/8
     lam = 7.3 * hbf
     psi = delta / lam
     ks = 3 * d90 + 1.1 * delta * (1 - math.e ** (-25 * psi))
     cf = (8.32 * (hbf/ks)**(1/6))**-2
-    S = (tau_bf * (R * (d50)))/hbf
+    
     Q_bf = ((g * hbf * S)/cf * (bbf ** 2 * hbf ** 2)) ** (1/2)
     
     alpha_t = alpha_EH/cf
@@ -264,8 +265,6 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
     u_st_p = (g ** (1/2))/cz * u_bar
     T = (u_st_p ** 2 - u_st_cr ** 2)/u_st_cr ** 2
     
-    a = 0.05 * hbf
-    
     sig_s = 0.5 * (d84/d50 + d16/d50)
     Ds = (1 + 0.011 * (sig_s - 1) * (T - 25)) * d50
     
@@ -278,6 +277,7 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
         
     u_st = (g * hbf * S) ** (1/2)
     
+    a = 0.05 * hbf
     if((ca_method == 'wp') or (ca_method == 'gp')):
         Rep = ((R * g * d50) ** (1/2) * d50) / v
         if(ca_method == 'wp'):

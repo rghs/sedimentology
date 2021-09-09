@@ -599,9 +599,31 @@ def rotate(dip_az, dip, rot_ang, ax_az, ax_pln = 0, bed_az_2_ax = True, lower = 
 #%% Geographic midpoint
 
 def geomid(lat,lon):
+    '''
+    Calculates an approximate midpoint of a set of coordinates in decimal 
+    latitude and longitude. Does not account for ellipsoid deviations.
+
+    Parameters
+    ----------
+    lat : array-like
+        List of latitudes.
+    lon : array-like
+        List of longitudes.
+
+    Returns
+    -------
+    avlat : float
+        Midpoint latitude of the provided coordinates.
+    avlong : float
+        Midpoint longitude of the provided coordinates.
+
+    '''
     if((hasattr(lat, '__len__') is False) and (hasattr(lat, '__lon__') is False)):
         warnings.warn('Need more than one point to compute average! Returning input lat and long.')
         return lat, lon
+    
+    if(len(lat) != len(lon)):
+        raise Exception('lat and lon must be of equal length.')
     
     rlat = np.radians(lat)
     rlon = np.radians(lon)
@@ -612,8 +634,8 @@ def geomid(lat,lon):
     
     if((abs(x) < 10**-9) and (abs(y) < 10**-9) and (abs(z) < 10**-9)):
         warnings.warn('Midpoint is centre of the Earth!')
-        avlat = None
-        avlon = None
+        avlat = np.nan
+        avlon = np.nan
     else:
         avlon = math.atan2(y,x)
         avhyp = math.sqrt(x**2 + y**2)

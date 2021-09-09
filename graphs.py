@@ -64,6 +64,27 @@ def lerouxEAD():
     return EAD_x, EAD_y
 
 def cmp(author = 1):
+    '''
+    Generates axes of initiation of motion graphs based on van Rijn (1984).
+
+    Parameters
+    ----------
+    author : int, optional
+        Specifies which curve to generate. Options are as follows:
+            - 1: Van Rijn, 1984
+            - 2: Shields
+            - 3: Engelund
+            - 4: Bagnold
+        The default is 1.
+
+    Returns
+    -------
+    cmp_x : np.ndarray
+        Points on x-axis of selected graph.
+    cmp_y : np.ndarray
+        Points on y-axis of selected graph.
+
+    '''
     x_base = np.array([1,2,4,6,8,10,20,40,60,80,100,200,400,600,800,1000])
     if(author == 1): # Van Rijn
         cmp_x = x_base[1:16]
@@ -80,9 +101,50 @@ def cmp(author = 1):
     
     return cmp_x, cmp_y
 
-#%% Graph plotting
+#%% Stock graph plotting
+
+def plot_leroux():
+    '''
+    Plots the Le Roux (1994) Effective Angular Deviation graph.
+
+    Returns
+    -------
+    fig : matplotlib figure
+        Plot of EAD vs consistency ratio.
+
+    '''
+    fig = plt.figure(figsize = (10,10))
+    x,y = lerouxEAD()
+    plt.plot(x,y)
+    plt.xlim(0,100)
+    plt.xticks(np.arange(0,120,20))
+    plt.xlabel('Consistency ratio')
+    plt.ylim(0, 180)
+    plt.yticks(np.arange(0,210,30))
+    plt.ylabel('Effective angular deviation / degrees')
+    
+    return fig
+
+#%% Custom graph plotting
 
 def windrose(x, b_int = 10):
+    '''
+    Generates windroses of directional (most commonly paleoflow) data.
+
+    Parameters
+    ----------
+    x : array-like
+        List of directional measurements.
+    b_int : float, optional
+        Interval by which measurements are binned. The default is 10.
+        (Note: numbers greater than 10 produce rather ugly graphs)
+
+    Returns
+    -------
+    fig : matplotlib figure
+        Windrose of plotted figure.
+
+    '''
     if(b_int > 10):
         warnings.warn('Bin sizes greater than 10 produce strange looking bars. You have been warned.')
     bins = np.arange(0,360+b_int,b_int)
