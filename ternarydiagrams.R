@@ -3,7 +3,25 @@
 library(ggplot2)
 library(ggtern)
 
-tern = function(dataset, x_col, y_col, z_col, categories = NULL, fields = NULL, limits = NULL){
+#' buildtern
+#' 
+#' Constructs ternary diagrams, with presets based on the standard sedimentary
+#' ternary diagrams after Dickinson et al. (1983)
+#'
+#' @param dataset Dataframe containing recalculated modes
+#' @param x_col Character of column name containing data for bottom left ternary (e.g., feldspar)
+#' @param y_col Character of column name containing data for top ternary (e.g., quartz)
+#' @param z_col Character of column name containing data for bottom right ternary (e.g., lithics)
+#' @param categories Character of column name containing classifying variable to shade points by (e.g. locality); optional
+#' @param fields Character specifying lines on diagram, select 'qmpk', 'qplvls', 'qtfl' or 'qmflt'; optional
+#' @param limits Vector containing limits for ternary i.e. c(1,0.2,0.2)
+#'
+#' @return tern: ggplot2 plot
+#' @export
+#'
+#' @examples
+#' buildtern(df, 'f', 'qt', 'l', 'locality', 'qtfl', c(1,0.2,0.2))
+buildtern = function(dataset, x_col, y_col, z_col, categories = NULL, fields = NULL, limits = NULL){
   if(is.character(x_col) == FALSE | is.character(y_col) == FALSE | is.character(z_col) == FALSE){
     stop('Column names must be passed as characters.')
   }
