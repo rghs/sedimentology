@@ -310,10 +310,10 @@ def currayMean(az, numbins, localities = None):
         results.loc[0, 'n'] = len(az)
         results.loc[0, 'W'] = sum(vec.w_comp)
         results.loc[0, 'V'] = sum(vec.v_comp)
-        if(math.degrees(math.atan(sum(vec.w_comp)/sum(vec.v_comp))) >= 0):
-            results.loc[0, 'gamma'] = math.degrees(math.atan(sum(vec.w_comp)/sum(vec.v_comp)))
+        if(math.degrees(math.atan2(sum(vec.w_comp),sum(vec.v_comp))) >= 0):
+            results.loc[0, 'gamma'] = math.degrees(math.atan2(sum(vec.w_comp),sum(vec.v_comp)))
         else:
-            results.loc[0, 'gamma'] = 360 + math.degrees(math.atan(sum(vec.w_comp)/sum(vec.v_comp)))
+            results.loc[0, 'gamma'] = 360 + math.degrees(math.atan2(sum(vec.w_comp),sum(vec.v_comp)))
         results.loc[0, 'r'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)
         results.loc[0, 'L'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)/len(az) * 100
     
