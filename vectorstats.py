@@ -216,10 +216,61 @@ def cart2sph(cn, ce, cd, degrees = True):
         plunge = np.degrees(plunge)
     return trend, plunge
 
-#%% Curray, 1956 - circular vector mean
-### Also includes calculation of sinuosity by relation found in Ghosh, 2000
+#%% Curray, 1956 - circular vector mean (with modifications after Sengupta and Rao, 1966)
 
-def currayMean(az, numbins, localities = None):
+def currayMean(az, numbins, deg_in=False, deg_out=False):
+    '''
+    Calculates circular vector mean after Curray, 1956.
+
+    Parameters
+    ----------
+    az : array-like
+        Array containing values of azimuths.
+    numbins : integer
+        Number of bins to separate values into.
+    deg_in : bool, optional
+        Specify if input angles are in degrees (True) or radians (False). The default is False.
+    deg_out : TYPE, optional
+        Specify if output angles are in degrees (True) or radians (False). The default is False.
+
+    Returns
+    -------
+    curr : CurrayCircMean
+        Class containing calculated properties as follows:
+            - n = number of readings
+            - W = E-W component of vector mean
+            - V = N-S component of vector mean
+            - gamma = mean vector
+            - r = magnitude of resultant vector
+            - L = consistency ratio (i.e., scaled magnitude)
+
+    '''
+    if(deg_in is False):
+        az = np.degrees(az)
+    ni, edges = np.histogram(az, numbins, range = (0,360))
+    binwidth = edges[1] - edges[0]
+    midpoints = edges[0:len(edges)-1] + binwidth/2
+    
+    w_comp = ni * np.sin(np.radians(midpoints))
+    v_comp = ni * np.cos(np.radians(midpoints))
+    
+    n = len(az)
+    W = np.sum(w_comp)
+    V = np.sum(v_comp)
+    gamma = np.degrees(np.arctan2(W,V))
+    if(gamma < 0):
+        gamma += 360
+    r = np.sqrt(V**2 + W**2)
+    L = r/n * 100
+    
+    if(deg_out is False):
+        gamma = np.radians(gamma)
+
+    curr = pd.DataFrame({'n':n,'W':W,'V':V,'gamma':gamma,'r':r,'L':L}, index=[0])
+    
+    return curr
+
+def currayMeanOld(az, numbins, localities = None):
     '''
     Calculates circular vector mean after Curray, 1956.
 
