@@ -230,7 +230,7 @@ def currayMean(az, numbins, deg_in=False, deg_out=False):
         Number of bins to separate values into.
     deg_in : bool, optional
         Specify if input angles are in degrees (True) or radians (False). The default is False.
-    deg_out : TYPE, optional
+    deg_out : bool, optional
         Specify if output angles are in degrees (True) or radians (False). The default is False.
 
     Returns
