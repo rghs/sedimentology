@@ -220,7 +220,8 @@ def cart2sph(cn, ce, cd, degrees = True):
 
 def currayMean(az, numbins, deg_in=False, deg_out=False):
     '''
-    Calculates circular vector mean after Curray, 1956.
+    Calculates circular vector mean after Curray, 1956 (with modifications
+    after Sengupta and Rao, 1966).
 
     Parameters
     ----------
@@ -236,7 +237,7 @@ def currayMean(az, numbins, deg_in=False, deg_out=False):
     Returns
     -------
     curr : CurrayCircMean
-        Class containing calculated properties as follows:
+        Dataframe containing calculated properties as follows:
             - n = number of readings
             - W = E-W component of vector mean
             - V = N-S component of vector mean
@@ -245,7 +246,7 @@ def currayMean(az, numbins, deg_in=False, deg_out=False):
             - L = consistency ratio (i.e., scaled magnitude)
 
     '''
-    if(deg_in is False):
+    if not deg_in:
         az = np.degrees(az)
     ni, edges = np.histogram(az, numbins, range = (0,360))
     binwidth = edges[1] - edges[0]
@@ -263,112 +264,12 @@ def currayMean(az, numbins, deg_in=False, deg_out=False):
     r = np.sqrt(V**2 + W**2)
     L = r/n * 100
     
-    if(deg_out is False):
+    if not deg_out:
         gamma = np.radians(gamma)
 
     curr = pd.DataFrame({'n':n,'W':W,'V':V,'gamma':gamma,'r':r,'L':L}, index=[0])
     
     return curr
-
-def currayMeanOld(az, numbins, localities = None):
-    '''
-    Calculates circular vector mean after Curray, 1956.
-
-    Parameters
-    ----------
-    az : float array_like
-        Array containing values of azimuths.
-    numbins : integer
-        Number of bins to separate values into.
-    localities : chr array_like, optional
-        Array containing values for site measurements were collected at.
-        Must be of identical length to az. Can be omitted if only one locality
-        is being calculated.
-
-    Returns
-    -------
-    results : pandas dataframe
-        Statistics calculated during calculation of vector mean +/- sinuosity.
-    '''
-    if(localities is None):
-        localities = []
-        
-    az = np.array(az)       ## Convert data to numpy array
-    az[az == 360] = 0       ## Convert 360 to 0
-    
-    # Raise exceptions for bad data
-    if any(y >= 360 for y in az) or any(y < 0 for y in az):
-        raise Exception('Array contains values outside range 0 <= x < 360.')
-        
-    # Build bins
-    bins = np.linspace(0, 360, numbins, endpoint = False)
-    bins = np.append(bins, 360)
-    
-    vec = pd.DataFrame({'bin':bins[0:len(bins)-1],
-                        'ni':np.zeros(len(bins)-1),
-                        'w_comp':np.zeros(len(bins)-1),
-                        'v_comp':np.zeros(len(bins)-1)})
-    
-    # Caclulate mean on all data or by locality
-    if(len(localities) > 0):
-        # Check if localities list is the right length
-        if(len(az) != len(localities)):
-            raise Exception('Localities list must be of same length as azimuth list.')
-        
-        # Build dataframe for results
-        df = pd.DataFrame({'az':az,
-                           'locs':localities})
-        arealist = localities.unique()
-        
-        results = pd.DataFrame({'locality':np.zeros(len(arealist)),
-                                'n':np.zeros(len(arealist)),
-                                'W':np.zeros(len(arealist)),
-                                'V':np.zeros(len(arealist)),
-                                'gamma':np.zeros(len(arealist)),
-                                'r':np.zeros(len(arealist)),
-                                'L':np.zeros(len(arealist))})
-        
-        for j in range(0,len(arealist)):
-            trim = df[df.locs == arealist[j]]
-            trim = trim.reset_index(drop = True)
-            
-            for i in range(0, len(bins)-1):
-                midpoint = (bins[i] + bins[i+1])/2
-                vec.loc[i, 'ni'] = len(trim.az[(trim.az >= bins[i]) & (trim.az < bins[i+1])])
-                vec.loc[i, 'w_comp'] = vec.ni[i] * math.sin(math.radians(midpoint))
-                vec.loc[i, 'v_comp'] = vec.ni[i] * math.cos(math.radians(midpoint))
-            
-            results.loc[j, 'locality'] = arealist[j]
-            results.loc[j, 'n'] = len(trim.az)
-            results.loc[j, 'W'] = sum(vec.w_comp)
-            results.loc[j, 'V'] = sum(vec.v_comp)
-            if(math.degrees(math.atan2(sum(vec.w_comp),sum(vec.v_comp))) >= 0):
-                results.loc[j, 'gamma'] = math.degrees(math.atan2(sum(vec.w_comp),sum(vec.v_comp)))
-            else:
-                results.loc[j, 'gamma'] = 360 + math.degrees(math.atan2(sum(vec.w_comp),sum(vec.v_comp)))
-            results.loc[j, 'r'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)
-            results.loc[j, 'L'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)/len(trim.az) * 100
-                        
-    else:    
-        for i in range(0, len(bins)-1):
-            midpoint = (bins[i] + bins[i+1])/2
-            vec.loc[i, 'ni'] = len(az[(az >= bins[i]) & (az < bins[i+1])])
-            vec.loc[i, 'w_comp'] = vec.ni[i] * math.sin(math.radians(midpoint))
-            vec.loc[i, 'v_comp'] = vec.ni[i] * math.cos(math.radians(midpoint))
-            
-        results = pd.DataFrame({'n':[0.0],'W':[0.0],'V':[0.0],
-                                'gamma':[0.0],'r':[0.0],'L':[0.0]})
-        results.loc[0, 'n'] = len(az)
-        results.loc[0, 'W'] = sum(vec.w_comp)
-        results.loc[0, 'V'] = sum(vec.v_comp)
-        if(math.degrees(math.atan2(sum(vec.w_comp),sum(vec.v_comp))) >= 0):
-            results.loc[0, 'gamma'] = math.degrees(math.atan2(sum(vec.w_comp),sum(vec.v_comp)))
-        else:
-            results.loc[0, 'gamma'] = 360 + math.degrees(math.atan2(sum(vec.w_comp),sum(vec.v_comp)))
-        results.loc[0, 'r'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)
-        results.loc[0, 'L'] = math.sqrt(sum(vec.w_comp) ** 2 + sum(vec.v_comp) ** 2)/len(az) * 100
-    
-    return results
 
 #%% Fisher, 1987 - spherical vector mean (code after Allmendinger, 2012)
 
