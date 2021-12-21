@@ -21,7 +21,7 @@ Sources:
 
 import numpy as np
 import pandas as pd
-import math
+# import math
 import warnings
     
 #%% Coordinate conversions - Allmendinger et al., 2012
@@ -109,9 +109,9 @@ def z2p(x):
         y[np.where(x >= (np.pi * 2))] -= np.pi * 2
     else:
         if(x < 0.0):
-            y = x + math.pi * 2
-        elif(x >= (math.pi * 2)):
-            y = x - math.pi * 2
+            y = x + np.pi * 2
+        elif(x >= (np.pi * 2)):
+            y = x - np.pi * 2
     
     return y
 
@@ -332,7 +332,7 @@ def fisherMean(trends, plunges, deg_in = True, deg_out = True, lower = True):
         cd_sum += cd
     
     # R is length of resultant vector, R_ave is R normalised to nlines
-    R = math.sqrt(cn_sum**2 + ce_sum**2 + cd_sum**2)
+    R = np.sqrt(cn_sum**2 + ce_sum**2 + cd_sum**2)
     R_ave = R/nlines
     
     # If R_ave < 0.1, mean vector is insignificant
@@ -367,22 +367,26 @@ def fisherMean(trends, plunges, deg_in = True, deg_out = True, lower = True):
             bfact = 1.0/(nlines - 1.0)
         
             # Calculate uncertainty cones
-            d99 = math.acos(1.0 - ((nlines - R)/R) * (afact**bfact - 1.0))
+            d99 = np.arccos(1.0 - ((nlines - R)/R) * (afact**bfact - 1.0))
             afact = 20.0
-            d95 = math.acos(1.0 - ((nlines - R)/R) * (afact**bfact - 1.0))
+            d95 = np.arccos(1.0 - ((nlines - R)/R) * (afact**bfact - 1.0))
         else:
             d99 = np.nan
             d95 = np.nan
     
     # Convert output to degrees
     if(deg_out == True):
-        trend_ave = math.degrees(trend_ave)
-        plunge_ave = math.degrees(plunge_ave)
-        d99 = math.degrees(d99)
-        d95 = math.degrees(d95)
-        
-    if((np.isnan(conc)) or (np.isnan(d99)) or (np.isnan(d95))):
-        warnings.warn('Could not calculate some or all Fisher statistics. Double check your results.')
+        trend_ave = np.degrees(trend_ave)
+        plunge_ave = np.degrees(plunge_ave)
+        d99 = np.degrees(d99)
+        d95 = np.degrees(d95)
+    
+    if(np.isnan(conc)):
+        warnings.warn('Could not calculate vector concentration. Returning conc as NaN.')
+    if(np.isnan(d99)):
+        warnings.warn('Could not calculate 99% confidence cone. Returning d99 as NaN.')
+    if(np.isnan(conc)):
+        warnings.warn('Could not calculate 95% confidence cone. Returning d95 as NaN.')
         
     return trend_ave, plunge_ave, R_ave, conc, d99, d95
 
@@ -429,12 +433,12 @@ def intersect(az1, d1, az2, d2, poles = False):
     cn2, ce2, cd2 = sph2cart(az2, d2)
     
     # Calculate theta
-    theta = math.acos(ce1*ce2 + cn1*cn2 + cd1*cd2)
+    theta = np.arccos(ce1*ce2 + cn1*cn2 + cd1*cd2)
     
     if(theta != 0):
-        i_ce = (cn1*cd2 - cd1*cn2)/math.sin(theta)
-        i_cn = -(ce1*cd2 - cd1*ce2)/math.sin(theta)
-        i_cd = (ce1*cn2 - cn1*ce2)/math.sin(theta)
+        i_ce = (cn1*cd2 - cd1*cn2)/np.sin(theta)
+        i_cn = -(ce1*cd2 - cd1*ce2)/np.sin(theta)
+        i_cd = (ce1*cn2 - cn1*ce2)/np.sin(theta)
     else:
         i_ce, i_cn, i_cd = 0,0,0
         
@@ -450,15 +454,15 @@ def intersect(az1, d1, az2, d2, poles = False):
     elif((i_ce == 0) and (i_cn == 0)):
         out_az = 0
     elif((i_ce < 0) and (i_cn >= 0)):
-        out_az = 450 - math.degrees(math.atan2(i_cn, i_ce))
+        out_az = 450 - np.degrees(np.arctan2(i_cn, i_ce))
     else:
-        out_az = 90 - math.degrees(math.atan2(i_cn, i_ce))
+        out_az = 90 - np.degrees(np.arctan2(i_cn, i_ce))
     
     # Calculate intersection plunge
     if(dip1 == 90 and dip2 == 90):
         out_plunge = 90
     else:
-        out_plunge = 90 - math.degrees(math.acos(i_cd))
+        out_plunge = 90 - np.degrees(np.arccos(i_cd))
     
     return out_az, out_plunge
 
@@ -589,11 +593,11 @@ def geomid(lat,lon):
         avlat = np.nan
         avlon = np.nan
     else:
-        avlon = math.atan2(y,x)
-        avhyp = math.sqrt(x**2 + y**2)
-        avlat = math.atan2(z, avhyp)
+        avlon = np.arctan2(y,x)
+        avhyp = np.sqrt(x**2 + y**2)
+        avlat = np.arctan2(z, avhyp)
         
-        avlon = math.degrees(avlon)
-        avlat = math.degrees(avlat)
+        avlon = np.degrees(avlon)
+        avlat = np.degrees(avlat)
     
     return avlat, avlon

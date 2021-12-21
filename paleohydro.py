@@ -54,8 +54,10 @@ def ghosh(L):
     S = np.exp(2.49 - 0.0475 * L + 0.000234 * np.square(L))
     S_max = np.exp(4.2416 - 0.0801 * L + 0.0004 * np.square(L))
     
-    sinuosity = pd.DataFrame({'S': S,
-                              'S_max': S_max})
+    if((hasattr(S, '__len__')) and (len(S) > 1)):
+        sinuosity = pd.DataFrame({'S': S,'S_max': S_max})
+    else:
+        sinuosity = pd.DataFrame({'S': S,'S_max': S_max}, index=[0])
     
     return sinuosity
 
@@ -98,8 +100,10 @@ def leroux(L):
     r_phi = np.radians(phi)
     S = (r_phi/2)/(np.sin(r_phi/2))
     
-    sinuosity = pd.DataFrame({'Phi':phi,
-                              'P':S})
+    if((hasattr(S, '__len__')) and (len(S) > 1)):
+        sinuosity = pd.DataFrame({'Phi': phi,'P': S})
+    else:
+        sinuosity = pd.DataFrame({'Phi': phi,'P': S}, index=[0])
     
     return sinuosity
 
