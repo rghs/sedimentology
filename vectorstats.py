@@ -218,7 +218,7 @@ def cart2sph(cn, ce, cd, degrees = True):
 
 #%% Curray, 1956 - circular vector mean (with modifications after Sengupta and Rao, 1966)
 
-def currayMean(az, numbins, deg_in=False, deg_out=False):
+def currayMean(az, numbins=None, deg_in=False, deg_out=False):
     '''
     Calculates circular vector mean after Curray, 1956 (with modifications
     after Sengupta and Rao, 1966).
@@ -228,7 +228,8 @@ def currayMean(az, numbins, deg_in=False, deg_out=False):
     az : array-like
         Array containing values of azimuths.
     numbins : integer
-        Number of bins to separate values into.
+        Number of bins to separate values into. Default is None, calculating 
+        dataset as ungrouped.
     deg_in : bool, optional
         Specify if input angles are in degrees (True) or radians (False). The default is False.
     deg_out : bool, optional
@@ -236,7 +237,7 @@ def currayMean(az, numbins, deg_in=False, deg_out=False):
 
     Returns
     -------
-    curr : CurrayCircMean
+    curr : pd.DataFrame
         Dataframe containing calculated properties as follows:
             - n = number of readings
             - W = E-W component of vector mean
@@ -246,26 +247,30 @@ def currayMean(az, numbins, deg_in=False, deg_out=False):
             - L = consistency ratio (i.e., scaled magnitude)
 
     '''
-    if not deg_in:
-        az = np.degrees(az)
-    ni, edges = np.histogram(az, numbins, range = (0,360))
-    binwidth = edges[1] - edges[0]
-    midpoints = edges[0:len(edges)-1] + binwidth/2
-    
-    w_comp = ni * np.sin(np.radians(midpoints))
-    v_comp = ni * np.cos(np.radians(midpoints))
+    if deg_in:
+        az = np.radians(az)
+        
+    if numbins is None:
+        w_comp = np.sin(az)
+        v_comp = np.cos(az)
+    else:
+        ni, edges = np.histogram(az, numbins, range = (0,2*np.pi))
+        binwidth = edges[1] - edges[0]
+        midpoints = edges[0:len(edges)-1] + binwidth/2
+        
+        w_comp = ni * np.sin(midpoints)
+        v_comp = ni * np.cos(midpoints)
     
     n = len(az)
     W = np.sum(w_comp)
     V = np.sum(v_comp)
-    gamma = np.degrees(np.arctan2(W,V))
-    if(gamma < 0):
-        gamma += 360
+    gamma = np.arctan(W/V)
+    
     r = np.sqrt(V**2 + W**2)
     L = r/n * 100
     
-    if not deg_out:
-        gamma = np.radians(gamma)
+    if deg_out:
+        gamma = np.degrees(gamma)
 
     curr = pd.DataFrame({'n':n,'W':W,'V':V,'gamma':gamma,'r':r,'L':L}, index=[0])
     
