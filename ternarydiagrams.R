@@ -13,8 +13,8 @@ library(ggtern)
 #' @param y_col Character of column name containing data for top ternary (e.g., quartz)
 #' @param z_col Character of column name containing data for bottom right ternary (e.g., lithics)
 #' @param categories Character of column name containing classifying variable to shade points by (e.g. locality); optional
-#' @param fields Character specifying lines on diagram, select 'qmpk', 'qplvls', 'qtfl' or 'qmflt'; optional
-#' @param limits Vector containing limits for ternary i.e. c(1,0.2,0.2)
+#' @param fields Character specifying lines on diagram, select 'qtfl' or 'qmflt'; optional
+#' @param limits Vector containing limits for ternary i.e. c(1,0.2,0.2); optional
 #'
 #' @return tern: ggplot2 plot
 #' @export
