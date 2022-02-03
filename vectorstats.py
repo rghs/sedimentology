@@ -21,9 +21,12 @@ Sources:
 
 import numpy as np
 import pandas as pd
-# import math
 import warnings
-    
+
+# Scipy components
+from scipy.special import iv
+from scipy import integrate
+
 #%% Coordinate conversions - Allmendinger et al., 2012
 
 # Calculate pole to plane measured with dip azimuth/dip
@@ -86,15 +89,18 @@ def pole2plane(dip_az, dip):
     
     return pol_az, pol_pln
 
-def z2p(x):
+def z2p(x, dp10 = True):
     '''
-    Converts circular coordinates in radians to a value between 0 and 2 pi
-    provided they are within 2 pi of one of the bounds.
+    Converts circular coordinates in radians to a value between 0 and 2 pi.
+    Rounds to 10 d.p. by default to reduce floating point precision errors.
     
     Parameters
     ----------
     x : Float
         Angle in radians.
+    dp10 : bool
+        Set whether to round to 10 d.p. (True) or to use standard python float
+        precision.
 
     Returns
     -------
@@ -102,16 +108,20 @@ def z2p(x):
         Value between 0 and 2 pi corresponding to provided value.
 
     '''
-    y = x
-    
-    if(isinstance(x, np.ndarray) == True):
-        y[np.where(x < 0.0)] += np.pi * 2
-        y[np.where(x >= (np.pi * 2))] -= np.pi * 2
+    if(hasattr(x, '__len__') is True):
+        y = np.array(x)
     else:
-        if(x < 0.0):
-            y = x + np.pi * 2
-        elif(x >= (np.pi * 2)):
-            y = x - np.pi * 2
+        y = np.array([x])
+        
+    y[y < 0] = 2*np.pi - (y[y < 0] % (2*np.pi))
+    y = y % (2*np.pi)
+    
+    if(dp10 == True):
+        y[np.round(y,10) == np.round(np.pi*2,10)] = 0
+        y[np.round(y,10) == 0] = 0
+    
+    if(len(y) == 1):
+        y = y[0]
     
     return y
 
@@ -215,6 +225,267 @@ def cart2sph(cn, ce, cd, degrees = True):
         trend = np.degrees(trend)
         plunge = np.degrees(plunge)
     return trend, plunge
+
+def circ_diff(x, y, deg_in = False, deg_out = False):
+    '''
+    Calculates distance of point y from point x around a circle, up to 
+    a maximum of pi (or 180 degrees). Negative values indicate counter-clockwise,
+    positive indicate clockwise.
+
+    Parameters
+    ----------
+    x : float or array-like
+        Azimuth of first point on circle.
+    y : float or array-like
+        Azimuth of second point on circle.
+    deg_in : bool, optional
+        Specifies if input is in degrees (True) or radians (False). The default is False.
+    deg_out : TYPE, optional
+        Specifies if output is in degrees (True) or radians (False). The default is False.
+
+    Returns
+    -------
+    diff : float or np.ndarray
+        Angular distance from point x to point y. Positive indicates clockwise
+        distance, negative indicates counter-clockwise distance.
+        
+    Example
+    -------
+    >>> circ_diff(10, 30, deg_in = True, deg_out = True)
+    20
+    >>> circ_diff(10, 270, deg_in = True, deg_out = True)
+    -100
+
+    '''
+    if hasattr(x, '__len__') is False:
+        x = np.array([x])
+        y = np.array([y])
+    if isinstance(x, np.ndarray) is False:
+        x = np.array(x)
+        y = np.array(y)
+    
+    if deg_in:
+        x = np.radians(x)
+        y = np.radians(y)
+    
+    diff = (x - y) % (2*np.pi)
+    invert = np.where(diff < np.pi)
+    loop = np.where(diff >= np.pi)
+    diff[invert] *=-1
+    diff[loop] = (2*np.pi - diff[loop])
+    
+    if deg_out:
+        diff = np.degrees(diff)
+        
+    if(len(diff) > 1):
+        return diff
+    else:
+        return diff[0]
+
+#%% Descriptive circular statistics
+
+def circmean(theta, deg_in = False, deg_out = False):
+    '''
+    Calculates the circular mean after Jammalamadaka and Sengupta, 2001: Topics in circular statistics.
+    Takes an array of floats as an input, returning a float value.
+    
+    Procedure as written in Jammalamadaka and Sengupta, 2001:
+    if((s >= 0) and (c > 0)):
+        th_bar = np.arctan(s/c)
+    elif((c == 0) and (s > 0)):
+        th_bar = np.pi/2
+    elif(c < 0):
+        th_bar = np.arctan(s/c) + np.pi
+    elif((s < 0) and (c >= 0)):
+        th_bar = np.arctan(s/c) + 2*np.pi
+    elif((c == 0) and (s == 0)):
+        th_bar = np.nan
+        
+    Function performs this operation using atan2 to present figure between zero and 2(pi)
+    '''
+    if(deg_in is True):
+        theta = np.radians(theta)
+    
+    s = np.sum(np.sin(theta))
+    c = np.sum(np.cos(theta))
+    
+    if(np.arctan2(s,c) < 0):
+        th_bar = 2 * np.pi + np.arctan2(s,c)
+    else:
+        th_bar = np.arctan2(s,c)
+    
+    if(deg_out is True):
+        th_bar = np.degrees(th_bar)
+    
+    return th_bar
+
+def meanveclen(theta, deg_in = False):
+    '''
+    Calculate R and D_v (mean vector length and circular variance)
+    after Jammalamadaka and Sengupta, 2001: Topics in circular statistics.
+    Takes an array of floats as an input, returning a float value.
+    
+    Returns
+    -------
+    R : float
+        Magnitude of mean vector
+    D_v : float
+        Circular dispersion of dataset
+    '''
+    if(deg_in is True):
+        theta = np.radians(theta)
+    
+    s = np.sum(np.sin(theta))
+    c = np.sum(np.cos(theta))
+    
+    R = abs(np.sqrt(c**2 + s**2)/len(theta))
+    
+    D_v = 1-R
+    
+    return R, D_v
+
+def circsd(R, deg_in = False, deg_out = False):
+    '''
+    Calculates cicular standard deviation using the mean vector length of
+    a dataset. (Designed with unit vectors in mind. Don't really know if it
+    makes a difference or not.)
+
+    Parameters
+    ----------
+    R : float
+        Length of the mean vector of the dataset.
+    deg_in : bool, optional
+        Set whether input is in degrees. The default is False.
+    deg_out : bool, optional
+        Set whether output is in degrees. The default is False.
+
+    Returns
+    -------
+    sd : float
+        Circular standard deviation of dataset.
+
+    '''
+    if(deg_in is True):
+        R = np.radians(R)
+    
+    sd = np.sqrt(np.log(1/R**2))
+    
+    if(deg_out is True):
+        sd = np.degrees(sd)
+        
+    return sd
+
+def a1inv(x):
+    if(hasattr(x, '__len__') is False):
+        x = np.array([x])
+    indices = np.arange(0, len(x))
+    a1 = np.zeros(len(x))
+    p1 = np.where((0 <= x) & (x < 0.53))[0]
+    p2 = np.where((x >= 0.53) & (x < 0.85))[0]
+    p3 = np.where(x == 1)[0]
+    p123 = np.append(p1,p2)
+    p123 = np.append(p123,p3)
+    p4 = np.where(np.isin(indices, p123) == False)[0]
+    
+    a1[p1] = 2 * x[p1] + x[p1]**3 + (5 * x[p1]**5)/6
+    a1[p2] = -0.4 + 1.39 * x[p2] + 0.43/(1-x[p2])
+    a1[p3] = np.inf
+    a1[p4] = 1/(x[p4]**3 - 4 * x[p4]**2 + 3 * x[p4])
+    
+    return a1
+
+def est_kappa(theta, deg_in = False, deg_out = False):
+    if(deg_in is True):
+         theta = np.radians(theta)
+    mu = circmean(theta)
+    kappa = a1inv(np.mean(np.cos(theta - mu)))[0]
+    return kappa
+
+#%% Von Mises distribution generation
+
+def vmdist(k, mu, dist_start = 0, dist_end = np.pi*2, space = int(1e3)):
+    '''
+    Generates a von Mises (VM) probability distribution function (PDF) and
+    cumulative distribution function (CDF).
+
+    Parameters
+    ----------
+    k : float
+        Kappa parameter of VM distribution (concentration factor).
+    mu : float
+        Mu parameter of VM distribution (centrepoint).
+    dist_start : float, optional
+        Starting point of distribution. The default is 0.
+    dist_end : float, optional
+        End point of distribution. The default is 2(pi).
+    space : int, optional
+        Increments of distribtion. The default is 1000.
+
+    Returns
+    -------
+    f : np.ndarray, dtype = float64 
+        PDF of VM distribution.
+    c : np.ndarray, dtype = float64 
+        Numerically (trapezoidal) integrated CDF of VM distribution.
+
+    '''
+    rng = np.linspace(dist_start, dist_end, space, endpoint = True)
+    f = np.exp(k * np.cos(rng - mu))/(2 * np.pi * iv(0, k))
+    c = integrate.cumulative_trapezoid(f, rng)
+    return f,c
+
+def vmsmp(kappa, mu, numsample, z2p = True, rng_seed = 12345):
+    if type(numsample) is not int:
+        numsample = int(numsample)
+        warnings.warn('Numsample converted to int dtype - make sure its still what you wanted.')
+        
+    rng = np.random.default_rng(seed = rng_seed)
+    if(z2p is True):
+        mu -= np.pi
+    
+    vm = rng.vonmises(mu, kappa, numsample)
+    
+    if(z2p is True):
+        vm += np.pi
+        
+    return vm
+
+
+# Method from https://stackoverflow.com/questions/28839246/scipy-gaussian-kde-and-circular-data
+def vmkde(data, kappa, n_bins = int(1e3), dist_min = 0):
+    '''
+    Produces a kernel density estimate for a given kappa of a von Mises
+    distribution across a 2 Pi interval.
+
+    Parameters
+    ----------
+    data : array-like
+        Dataset to produce KDE from.
+    kappa : float
+        Kappa of dataset provided.
+    n_bins : int, optional
+        Number of bins to calculate KDE across. The default is 1000.
+    dist_min : float, optional
+        Lower bound of distribution. Common values are 0 and -pi. The default is 0.
+
+    Returns
+    -------
+    bins : np.ndarray
+        Bin boundaries into which data has been split.
+    kde : np.ndarray
+        KDE results for dataset.
+
+    '''
+    if type(n_bins) is not int:
+        int(n_bins)
+        warnings.warn('n_bins converted to int dtype.')
+    dist_max = dist_min + 2*np.pi
+    bins = np.linspace(dist_min, dist_max, n_bins)
+    
+    kde = np.exp(kappa * np.cos(bins[:,None] - data[None,:])).sum(1)/(2 * np.pi * iv(0, kappa))
+    kde /= np.trapz(kde, x=bins)
+    
+    return bins, kde
 
 #%% Curray, 1956 - circular vector mean (with modifications after Sengupta and Rao, 1966)
 

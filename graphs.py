@@ -10,8 +10,6 @@ Generate graphs for various procedures and find intersection of lines.
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
-import plotly.express as px     # From https://pypi.org/project/plotly/ (pip install plotly)
-import ternary as tern          # ternary from python-ternary: https://github.com/marcharper/python-ternary
 
 #%% Line intersect
 # Find the intersection of two straight lines by specifying two points on each
@@ -161,10 +159,5 @@ def windrose(x, b_int = 10):
     ax.bar(x_coords, binned, width = width, align = 'edge')
     ax.set_theta_direction(-1)
     ax.set_theta_zero_location("N")
-    
-    return fig
-
-def qtfl(df, qt, f, l, label = None):
-    fig = px.scatter_ternary(df, a=qt, b=f, c=l, color=label)
     
     return fig

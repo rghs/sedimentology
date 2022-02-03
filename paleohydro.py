@@ -113,6 +113,8 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
             grainsize_m = False, hm_hbf = 8, ca_method = 'vr',
             crit_mob_param = 1, crit_mob_manual = 0):
     '''
+    UNDER CONSTRUCTION
+    
     Performs calculations for source to sink fulcrum method as developed
     by Holbrook and Wanas (2014), using grain size and foreset height.
 
