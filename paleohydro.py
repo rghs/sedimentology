@@ -30,7 +30,6 @@ Sources:
 import numpy as np
 import pandas as pd
 import warnings
-import math
 import graphs as gr
 
 #%% Ghosh, 2000
@@ -231,7 +230,7 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
     delta = hbf/8
     lam = 7.3 * hbf
     psi = delta / lam
-    ks = 3 * d90 + 1.1 * delta * (1 - math.e ** (-25 * psi))
+    ks = 3 * d90 + 1.1 * delta * (1 - np.e ** (-25 * psi))
     cf = (8.32 * (hbf/ks)**(1/6))**-2
     
     Q_bf = ((g * hbf * S)/cf * (bbf ** 2 * hbf ** 2)) ** (1/2)

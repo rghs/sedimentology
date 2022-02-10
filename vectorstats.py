@@ -50,42 +50,32 @@ def pole2plane(dip_az, dip):
         Plunge of calculated pole.
 
     '''
-    if((hasattr(dip_az, '__len__') == True) and (isinstance(dip_az, np.ndarray) == False)):
+    if((hasattr(dip_az, '__len__') is True) and (isinstance(dip_az, np.ndarray) is False)):
         dip_az = np.asarray(dip_az)
         dip = np.asarray(dip)
+    elif(hasattr(dip_az, '__len__') is False):
+         dip_az = np.array([dip_az])
+         dip = np.array([dip])
     
-    if(isinstance(dip_az,np.ndarray) == True):
-        dip_az[dip_az == 360] = 0
+    dip_az[dip_az == 360] = 0
+
+    if(any(dip_az > 360) or any(dip_az < 0)):
+        raise Exception('Dip azimuth must fall in range 0 <= x <= 360')
+    if(any(dip > 90) or any(dip < 0)):
+        raise Exception('Dip must fall in range 0 <= x <= 90')
     
-        if(any(dip_az > 360) or any(dip_az < 0)):
-            raise Exception('Dip azimuth must fall in range 0 <= x <= 360')
-        if(any(dip > 90) or any(dip < 0)):
-            raise Exception('Dip must fall in range 0 <= x <= 90')
-        
-        pol_az = dip_az
-        pol_az[np.where(dip_az < 180.0)] += 180
-        pol_az[np.where(dip_az >= 180.0)] -= 180
+    pol_az = dip_az
+    add = np.where(dip_az < 180.0)
+    sub = np.where(dip_az >= 180.0)
     
-        pol_pln = 90 - dip
+    pol_az[add] += 180
+    pol_az[sub] -= 180
+
+    pol_pln = 90 - dip
     
-    else:
-        # Fix readings of 360 degrees
-        if(dip_az == 360.0):
-            dip_az = 0.0
-            
-        # Calculate azimuth of pole to plane
-        if(dip_az >= 0.0) and (dip_az < 180.0):
-            pol_az = dip_az + 180
-        elif(dip_az >= 180.0) and (dip_az < 360.0):
-            pol_az = dip_az - 180
-        else:
-            raise Exception('Dip azimuth must fall in range 0 <= x <= 360')
-        
-        # Calculate plunge of pole to plane
-        if(dip <= 90.0) and (dip >= 0.0):
-            pol_pln = 90 - dip
-        else:
-            raise Exception('Dip must fall in range 0 <= x <= 90')
+    if(len(dip_az == 1)):
+        pol_az = pol_az[0]
+        pol_pln = pol_pln[0]
     
     return pol_az, pol_pln
 
@@ -113,7 +103,7 @@ def z2p(x, dp10 = True):
     else:
         y = np.array([x])
         
-    y[y < 0] = 2*np.pi - (y[y < 0] % (2*np.pi))
+    # y[y < 0] = 2*np.pi - (y[y < 0] % (2*np.pi))
     y = y % (2*np.pi)
     
     if(dp10 == True):
@@ -154,7 +144,7 @@ def sph2cart(ln_trend, ln_plunge, degrees = True):
         raise Exception('Degrees needs boolean value.')
     
     # Convert degrees to radians
-    if(degrees == True):
+    if(degrees is True):
         ln_trend = np.radians(ln_trend)
         ln_plunge = np.radians(ln_plunge)
     
@@ -189,41 +179,40 @@ def cart2sph(cn, ce, cd, degrees = True):
         Plunge of line.
 
     '''
-    if(type(degrees) != bool):
+    if(type(degrees) is not bool):
         raise Exception('Degrees needs boolean value.')       
     
     # Calculate plunge
     plunge = np.arcsin(cd)
     
-    # Calculate trend
-    if(hasattr(cn, '__len__') == True):
-        if(isinstance(cn, np.ndarray) == False):
-            cn = np.array(cn)
-            ce = np.array(ce)
-            cd = np.array(cd)
-        trend = np.zeros(len(cn))
-        trend[np.where((cn == 0.0) & (ce < 0.0))] = 3/2 * np.pi
-        trend[np.where((cn == 0.0) & (ce >= 0.0))] = np.pi/2
-        trend[np.where(cn != 0.0)] = np.arctan(ce[np.where((cn != 0.0))]/cn[np.where((cn != 0.0))])
-        trend[np.where(cn < 0.0)] += np.pi
-        trend[np.where(cn != 0.0)] = z2p(trend[np.where(cn != 0.0)])
-    else:
-        if(cn == 0.0):
-            if(ce < 0.0):
-                trend = 3/2 * np.pi
-            else:
-                trend = np.pi/2
-        else:
-            trend = np.arctan(ce/cn)
-            if(cn < 0.0):
-                trend += np.pi
-            trend = z2p(trend)
+    if((hasattr(cn, '__len__') is True) and (isinstance(cn, np.ndarray) is False)):
+        cn = np.asarray(cn)
+        ce = np.asarray(ce)
+        cd = np.asarray(cd)
+    elif(hasattr(cn, '__len__') is False):
+         cn = np.asarray([cn])
+         ce = np.asarray([ce])
+         cd = np.asarray([cd])
     
-        
+    # Calculate trend
+    trend = np.zeros(len(cn))
+    trend[np.where((cn == 0.0) & (ce < 0.0))] = 3/2 * np.pi
+    trend[np.where((cn == 0.0) & (ce >= 0.0))] = np.pi/2
+    
+    cn0 = np.where(cn != 0.0)
+    cn1 = np.where(cn < 0.0)
+    
+    trend[cn0] = np.arctan(ce[cn0]/cn[cn0])
+    trend[cn1] += np.pi
+    trend[cn0] = z2p(trend[cn0])
+            
     # Convert to degrees if asked
     if(degrees == True):
         trend = np.degrees(trend)
         plunge = np.degrees(plunge)
+    
+    if(len(trend) == 1):
+        trend = trend[0]
     return trend, plunge
 
 def circ_diff(x, y, deg_in = False, deg_out = False):
@@ -492,7 +481,7 @@ def vmkde(data, kappa, n_bins = int(1e3), dist_min = 0):
 def currayMean(az, numbins=None, deg_in=False, deg_out=False):
     '''
     Calculates circular vector mean after Curray, 1956 (with modifications
-    after Sengupta and Rao, 1966).
+    after Sengupta and Rao, 1966). Superseded by circmean and meanveclen.
 
     Parameters
     ----------
@@ -585,14 +574,26 @@ def fisherMean(trends, plunges, deg_in = True, deg_out = True, lower = True):
         95% uncertainty cone for vector mean.
 
     '''
+    if(hasattr(trends,'__len__') is False):
+        trend_ave = trends
+        plunge_ave = plunges
+        R_ave = np.nan
+        conc = np.nan
+        d99 = np.nan
+        d95 = np.nan
+        
+        warnings.warn('Only one value provided! Returning input as average. (Your data\
+                      probably has some NaNs somewhere now.)')
+        return trend_ave, plunge_ave, R_ave, conc, d99, d95
     
-    if(isinstance(trends, np.ndarray) == False):
+    if(isinstance(trends, np.ndarray) is False):
         trends = np.array(trends)
         plunges = np.array(plunges)
     
-    if(deg_in == True):
+    if(deg_in is True):
         trends = np.radians(trends)
         plunges = np.radians(plunges)
+        
     # Number of lines
     nlines = len(trends)
     
@@ -620,7 +621,7 @@ def fisherMean(trends, plunges, deg_in = True, deg_out = True, lower = True):
         ce_sum = ce_sum/R
         cd_sum = cd_sum/R
         # Converts mean vector to lower hemisphere
-        if((cd_sum < 0.0) and (lower == True)):
+        if((cd_sum < 0.0) and (lower is True)):
             cn_sum = -cn_sum
             ce_sum = -ce_sum
             cd_sum = -cd_sum
