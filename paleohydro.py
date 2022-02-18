@@ -199,7 +199,7 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
     c0 = 0.65           # Empirical constant
     k = 0.4             # Von Karman constant
     
-    if(grainsize_m == False):
+    if(grainsize_m is False):
         d16 = d16/1000
         d50 = d50/1000
         d84 = d84/1000

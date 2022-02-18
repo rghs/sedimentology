@@ -15,6 +15,7 @@ Sources:
         tensors
         DOI: 10.1017/CBO9780511920202
     - Fisher et al., 1987: Statistical Analysis of Spherical Data
+    - Jammalamadaka and Sengupta, 2001: Topics in circular statistics
 """
 
 #%% Import packages
@@ -33,7 +34,7 @@ from scipy import integrate
 def pole2plane(dip_az, dip):
     '''
     Calculate pole to plane measured with dip azimuth/dip. (Also works
-    for converting poles to planes.)
+    for converting planes to poles.)
 
     Parameters
     ----------
@@ -103,10 +104,9 @@ def z2p(x, dp10 = True):
     else:
         y = np.array([x])
         
-    # y[y < 0] = 2*np.pi - (y[y < 0] % (2*np.pi))
     y = y % (2*np.pi)
     
-    if(dp10 == True):
+    if(dp10 is True):
         y[np.round(y,10) == np.round(np.pi*2,10)] = 0
         y[np.round(y,10) == 0] = 0
     
@@ -140,7 +140,7 @@ def sph2cart(ln_trend, ln_plunge, degrees = True):
         North component of cartesian coordinate.
 
     '''
-    if(type(degrees) != bool):
+    if(type(degrees) is not bool):
         raise Exception('Degrees needs boolean value.')
     
     # Convert degrees to radians
@@ -391,6 +391,7 @@ def est_kappa(theta, deg_in = False, deg_out = False):
     return kappa
 
 #%% Von Mises distribution generation
+# Useful for testing methods relating to circular distributions
 
 def vmdist(k, mu, dist_start = 0, dist_end = np.pi*2, space = int(1e3)):
     '''
@@ -424,6 +425,31 @@ def vmdist(k, mu, dist_start = 0, dist_end = np.pi*2, space = int(1e3)):
     return f,c
 
 def vmsmp(kappa, mu, numsample, z2p = True, rng_seed = 12345):
+    '''
+    Generates random samples from a Von Mises distribution using the numpy
+    random generator function.
+
+    Parameters
+    ----------
+    kappa : float
+        Spread of the Von Mises distribution.
+    mu : float
+        Centrepoint of Von Mises distibution. Should fall in range -pi to pi
+        or 0 to 2 pi.
+    numsample : int
+        Number of samples to draw from distribution.
+    z2p : bool, optional
+        Determines whether range of sampling is from 0 to 2 pi (True) or from
+        -pi to pi (False). The default is True.
+    rng_seed : int, optional
+        Seed for the numpy random generator. The default is 12345.
+
+    Returns
+    -------
+    vm : np array of floats
+        Randomly selected samples from the specified Von Mises distribution.
+
+    '''
     if type(numsample) is not int:
         numsample = int(numsample)
         warnings.warn('Numsample converted to int dtype - make sure its still what you wanted.')
@@ -507,7 +533,7 @@ def currayMean(az, numbins=None, deg_in=False, deg_out=False):
             - L = consistency ratio (i.e., scaled magnitude)
 
     '''
-    if deg_in:
+    if deg_in is True:
         az = np.radians(az)
         
     if numbins is None:
@@ -529,7 +555,7 @@ def currayMean(az, numbins=None, deg_in=False, deg_out=False):
     r = np.sqrt(V**2 + W**2)
     L = r/n * 100
     
-    if deg_out:
+    if deg_out is True:
         gamma = np.degrees(gamma)
 
     curr = pd.DataFrame({'n':n,'W':W,'V':V,'gamma':gamma,'r':r,'L':L}, index=[0])
@@ -582,8 +608,8 @@ def fisherMean(trends, plunges, deg_in = True, deg_out = True, lower = True):
         d99 = np.nan
         d95 = np.nan
         
-        warnings.warn('Only one value provided! Returning input as average. (Your data\
-                      probably has some NaNs somewhere now.)')
+        warnings.warn('Only one value provided to fisherMean! Returning input as average.\
+                      (Your data probably has some NaNs somewhere now.)')
         return trend_ave, plunge_ave, R_ave, conc, d99, d95
     
     if(isinstance(trends, np.ndarray) is False):
@@ -652,7 +678,7 @@ def fisherMean(trends, plunges, deg_in = True, deg_out = True, lower = True):
             d95 = np.nan
     
     # Convert output to degrees
-    if(deg_out == True):
+    if(deg_out is True):
         trend_ave = np.degrees(trend_ave)
         plunge_ave = np.degrees(plunge_ave)
         d99 = np.degrees(d99)
@@ -785,12 +811,12 @@ def rotate(dip_az, dip, rot_ang, ax_az, ax_pln = 0, bed_az_2_ax = True, lower = 
         Plunge of rotated feature(s), measured in degrees.
 
     '''
-    if((hasattr(dip_az, '__len__') == True) and (isinstance(dip_az, np.ndarray) == False)):
+    if((hasattr(dip_az, '__len__') == True) and (isinstance(dip_az, np.ndarray) is False)):
         dip_az = np.asarray(dip_az)
         dip = np.asarray(dip)
         
     # Bed azimuth to axis
-    if(bed_az_2_ax == True):
+    if(bed_az_2_ax is True):
         if((ax_az - 90) > 0):
             ax_az = ax_az - 90
         else:
@@ -811,8 +837,8 @@ def rotate(dip_az, dip, rot_ang, ax_az, ax_pln = 0, bed_az_2_ax = True, lower = 
     r_cd = np.cos(np.radians(rot_ang))*d_cd + dot*a_cd + np.sin(np.radians(rot_ang))*(a_ce*d_cn - a_cn*d_ce)
     
     # Convert point to lower hemisphere
-    if(lower == True):
-        if(isinstance(r_cd, np.ndarray) == True):
+    if(lower is True):
+        if(isinstance(r_cd, np.ndarray) is True):
             convert = np.array((r_cd >= 0), dtype = int)
             convert[convert == 0] = -1
             
@@ -855,7 +881,7 @@ def geomid(lat,lon):
         warnings.warn('Need more than one point to compute average! Returning input lat and long.')
         return lat, lon
     
-    if(len(lat) != len(lon)):
+    if(len(lat) is not len(lon)):
         raise Exception('lat and lon must be of equal length.')
     
     rlat = np.radians(lat)

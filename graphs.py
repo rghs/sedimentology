@@ -103,7 +103,7 @@ def cmp(author = 1):
 
 #%% Stock graph plotting
 
-def plot_leroux():
+def plot_leroux(silent = True):
     '''
     Plots the Le Roux (1994) Effective Angular Deviation graph.
 
@@ -123,11 +123,14 @@ def plot_leroux():
     plt.yticks(np.arange(0,210,30))
     plt.ylabel('Effective angular deviation / degrees')
     
+    if silent is True:
+        plt.close()
+    
     return fig
 
 #%% Custom graph plotting
 
-def windrose(x, b_int = 10):
+def windrose(x, b_int = 10, silent = True):
     '''
     Generates windroses of directional (most commonly paleoflow) data.
 
@@ -159,5 +162,8 @@ def windrose(x, b_int = 10):
     ax.bar(x_coords, binned, width = width, align = 'edge')
     ax.set_theta_direction(-1)
     ax.set_theta_zero_location("N")
+    
+    if silent is True:
+        plt.close()
     
     return fig
