@@ -140,6 +140,9 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
         If "single" or "braid" is provided, width will be calculated using H_bf and
         appropriate relationships from Bridge and Mackey (1993) or Leopold and Maddock (1953).
         The default is "single".
+    depth : float, optional
+        Bankfull depth in m. If left as 0, bankfull depth will be calculated from
+        sm.
     grainsize_m : bool, optional
         Designates whether the grainsize is input in m (True) or mm (False). The default is False.
     hm_hbf : float, optional
