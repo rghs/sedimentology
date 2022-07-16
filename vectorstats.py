@@ -297,11 +297,14 @@ def circmean(theta, deg_in = False, deg_out = False):
     
     s = np.sum(np.sin(theta))
     c = np.sum(np.cos(theta))
-    
-    if(np.arctan2(s,c) < 0):
-        th_bar = 2 * np.pi + np.arctan2(s,c)
+     
+    if(abs(s) < 1e-15) and (abs(c) < 1e-15):
+        th_bar = np.nan
     else:
         th_bar = np.arctan2(s,c)
+        
+    if(th_bar < 0):
+        th_bar = th_bar + 2*np.pi
     
     if(deg_out is True):
         th_bar = np.degrees(th_bar)
