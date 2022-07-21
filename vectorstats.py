@@ -273,7 +273,7 @@ def circ_diff(x, y, deg_in = False, deg_out = False):
 
 #%% Descriptive circular statistics
 
-def circmean(theta, deg_in = False, deg_out = False):
+def circmean(theta, deg_in = False, deg_out = False, verbose = False):
     '''
     Calculates the circular mean after Jammalamadaka and Sengupta, 2001: Topics in circular statistics.
     Takes an array of floats as an input, returning a float value.
@@ -297,7 +297,9 @@ def circmean(theta, deg_in = False, deg_out = False):
     
     s = np.sum(np.sin(theta))
     c = np.sum(np.cos(theta))
-     
+    
+    # print(s,c)
+    
     if(abs(s) < 1e-15) and (abs(c) < 1e-15):
         th_bar = np.nan
     else:
@@ -309,7 +311,10 @@ def circmean(theta, deg_in = False, deg_out = False):
     if(deg_out is True):
         th_bar = np.degrees(th_bar)
     
-    return th_bar
+    if verbose is True:
+        return th_bar, s, c
+    else:
+        return th_bar
 
 def meanveclen(theta, deg_in = False):
     '''
