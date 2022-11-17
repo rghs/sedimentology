@@ -863,3 +863,29 @@ def rotate(dip_az, dip, rot_ang, ax_az, ax_pln = 0, bed_az_2_ax = True, lower = 
     
     return trend, plunge
 
+#%% Quality of life functions
+
+def paleoflow(laz, ldip, raz, rdip, bed_az = None, bed_dip = None):
+    if isinstance(laz, np.ndarray) is False:
+        laz = np.array(laz)
+    if isinstance(ldip, np.ndarray) is False:
+        ldip = np.array(ldip)
+    if isinstance(raz, np.ndarray) is False:
+        raz = np.array(raz)
+    if isinstance(rdip, np.ndarray) is False:
+        rdip = np.array(rdip)
+    
+    mn_laz,mn_ldip = fisherMean(laz, ldip)[0:2]
+    mn_raz,mn_rdip = fisherMean(raz, rdip)[0:2]
+    
+    ax_az, ax_dip = intersect(mn_laz, mn_ldip, mn_raz, mn_rdip)
+    
+    if hasattr(bed_az, '__divmod__') and hasattr(bed_dip, '__divmod__'):
+        bed_az = np.array(bed_az)
+        bed_dip = np.array(bed_dip)
+        if(hasattr(bed_az, '__len__') and len(bed_az) > 1):
+            bed_az = np.mean(bed_az)
+            bed_dip = np.mean(bed_dip)
+        ax_az, ax_dip = rotate(ax_az,ax_dip,bed_dip,bed_az)
+    
+    return ax_az, ax_dip
