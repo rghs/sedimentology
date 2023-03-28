@@ -346,3 +346,42 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
                             'total_sediment_discharge':[total_km]})
     
     return results
+
+def fulcrumEmptyDf(length):
+    '''
+    Produces a blank dataframe for the fulcrum method calculations. Useful for
+    creating a placeholder dataframe to put the output of a loop into. See docs 
+    for fulcrum for further details.
+
+    Parameters
+    ----------
+    length : int
+        Number of blank rows desired.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        Pandas data frame with zeros for desired number of rows.
+
+    '''
+    blank_row = np.zeros(int(length))
+    df = pd.DataFrame({'d16':blank_row,
+                    'd50':blank_row,
+                    'd84':blank_row,
+                    'd90':blank_row,
+                    'mean_foreset_height':blank_row,
+                    'channel_width':blank_row,
+                    'channel_depth':blank_row,
+                    'slope':blank_row,
+                    'mean_flow_velocity':blank_row,
+                    'critical_mobility_parameter':blank_row,
+                    'bankfull_discharge':blank_row,
+                    'bankfull_suspended_discharge':blank_row,
+                    'bankfull_bedload_discharge':blank_row,
+                    'mean_annual_sediment_discharge':blank_row,
+                    'bankfull_interval':blank_row,
+                    'bankfull_multiplier':blank_row,
+                    'duration':blank_row,
+                    'total_sediment_discharge':blank_row})
+    
+    return df

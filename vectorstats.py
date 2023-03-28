@@ -601,16 +601,21 @@ def fisherMean(trends, plunges, deg_in = True, deg_out = True, lower = True):
     R_ave : float
         Normalised length of resultant vector.
     conc : float
-        Fisher (1987) concentration factor. Returns 0 
+        Fisher (1987) concentration factor. Returns 0 if measurements are
+        uniformly dispersed about a sphere, 1 if all measurements are the same.
     d99 : float
         99% uncertainty cone for vector mean.
     d95 : float
         95% uncertainty cone for vector mean.
 
     '''
-    if(hasattr(trends,'__len__') is False):
-        trend_ave = trends
-        plunge_ave = plunges
+    if((hasattr(trends,'__len__') is False) or (len(trends) == 1)):
+        try:
+            trend_ave = list(trends)[0]
+            plunge_ave = list(plunges)[0]
+        except:
+            trend_ave = trends
+            plunge_ave = plunges
         R_ave = np.nan
         conc = np.nan
         d99 = np.nan
