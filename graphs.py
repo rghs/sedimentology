@@ -36,6 +36,24 @@ def get_intersect(a1, a2, b1, b2):
     int_y = y/z
     return int_x, int_y
 
+def get_y_val(x_series,y_series,x_unknown):
+    '''
+    Uses get_intersect to get the Y value of a desired x point.
+    '''
+    x_series = np.asarray(x_series)
+    y_series = np.asarray(y_series)
+    
+    lower = np.max(np.where(x_series <= x_unknown))
+    upper = np.max(np.where(x_series >= x_unknown))
+    
+    a1 = [x_unknown, np.min(y_series)]
+    a2 = [x_unknown, np.max(y_series)]
+    b1 = [x_series[lower], y_series[lower]]
+    b2 = [x_series[upper], y_series[upper]]
+    
+    _, intersect_y = get_intersect(a1, a2, b1, b2)
+    
+    return intersect_y
 
 #%% Useful graphs in sedimentology
 def lerouxEAD():
