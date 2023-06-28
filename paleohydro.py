@@ -110,7 +110,8 @@ def leroux(L):
 
 def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
             grainsize_m = False, hm_hbf = 8, ca_method = 'vr',
-            crit_mob_param = 1, crit_mob_manual = 0):
+            crit_mob_param = 1, crit_mob_manual = 0,
+            all_parameters=False):
     '''
     UNDER CONSTRUCTION
     
@@ -148,7 +149,7 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
     hm_hbf : float, optional
         The multiplier specifying ratio between Hm and Hbf, constrained by 
         LeClair and Bridge (2001) as falling between 6 and 10. The default is 8.
-    ca_method : int, optional
+    ca_method : str, optional
         Specify method used to calculate c_a as follows:
             - 'wp': Wright and Parker, 2004
             - 'gp': Garcia and Parker, 1991
@@ -241,7 +242,7 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
     alpha_t = alpha_EH/cf
     Q_tbf = bbf * (R * g * d50) ** (1/2) * d50 * alpha_t * (phi_s * tau_bf - tau_c) ** nt
     
-    D_st = d50 * (((s-1)*g)/v**2)**(1/3)        
+    D_st = d50 * (((s-1)*g)/v**2)**(1/3)
     
     # Construct critical mobility space and select appropriate parameter
     if(crit_mob_manual == 0):
@@ -291,13 +292,15 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
         if(ca_method == 'wp'):
             # Wright and Parker, 2004
             A = 5.7e-7
-            Zu = (u_st/w_s) * (Rep ** 0.6) * (S ** 0.07)
+            Zu = (u_st/w_s) * (Rep**0.6) * (S**0.07)
         else:
             # Garcia and Parker, 1991
             A = 1.3e-7
-            Zu = (u_st/w_s) * (Rep ** 0.6)
-        ca = (A * Zu ** 5)/(1 + (A/0.3) * Zu ** 5)
+            Zu = (u_st/w_s) * (Rep**0.6)
+        ca = (A * (Zu**5))/(1 + (A/0.3) * (Zu**5))
     elif(ca_method == 'vr'):
+        A=np.nan
+        Zu=np.nan
         # Van Rijn, 1984
         ca = 0.015 * (d50/a) * T**1.5/D_st**0.3
     else:
@@ -326,7 +329,8 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
     total_km = Qmas_km * duration
     
     # Construct results table
-    results = pd.DataFrame({'d16':[d16],
+    if all_parameters is False:
+        results = pd.DataFrame({'d16':[d16],
                             'd50':[d50],
                             'd84':[d84],
                             'd90':[d90],
@@ -344,10 +348,71 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
                             'bankfull_multiplier':[b],
                             'duration':[duration],
                             'total_sediment_discharge':[total_km]})
+    elif all_parameters is True:
+        results = pd.DataFrame({'d16':[d16],
+                            'd50':[d50],
+                            'd84':[d84],
+                            'd90':[d90],
+                            'mean_foreset_height':[sm],
+                            'channel_width':[bbf],
+                            'channel_depth':[hbf],
+                            'slope':[S],
+                            'mean_flow_velocity':[u_bar],
+                            'critical_mobility_parameter':[m],
+                            'bankfull_discharge':[Q_bf],
+                            'bankfull_suspended_discharge':[Qs],
+                            'bankfull_bedload_discharge':[Q_tbf],
+                            'mean_annual_sediment_discharge':[Qmas],
+                            'bankfull_interval':[tbd],
+                            'bankfull_multiplier':[b],
+                            'duration':[duration],
+                            'total_sediment_discharge':[total_km],
+                            'tau_bf':[tau_bf],
+                            'R':[R],
+                            'g':[g],
+                            'tau_c':[tau_c],
+                            'alpha_EH':[alpha_EH],
+                            'nt':[nt],
+                            'phi_s':[phi_s],
+                            'v':[v],
+                            's':[s],
+                            'c0':[c0],
+                            'k':[k],
+                            'Hbf':[hbf],
+                            'Bbf':[bbf],
+                            'S':[S],
+                            'delta':[delta],
+                            'lam':[lam],
+                            'psi':[psi],
+                            'ks':[ks],
+                            'cf':[cf],
+                            'alpha_t':[alpha_t],
+                            'D_st':[D_st],
+                            'm':[m],
+                            'u_st_cr':[u_st_cr],
+                            'cz':[cz],
+                            'Rh':[Rh],
+                            'u_bar':[u_bar],
+                            'u_st_p':[u_st_p],
+                            'T':[T],
+                            'sig_s':[sig_s],
+                            'Ds':[Ds],
+                            'w_s':[w_s],
+                            'u_st':[u_st],
+                            'a':[a],
+                            'Rep':[Rep],
+                            'Zu':[Zu],
+                            'A':[A],
+                            'ca':[ca],
+                            'beta':[beta],
+                            'phi':[phi],
+                            'Z':[Z],
+                            'Zp':[Zp],
+                            'F':[F]})
     
     return results
 
-def fulcrumEmptyDf(length):
+def fulcrumEmptyDf(length, all_parameters=False):
     '''
     Produces a blank dataframe for the fulcrum method calculations. Useful for
     creating a placeholder dataframe to put the output of a loop into. See docs 
@@ -365,7 +430,8 @@ def fulcrumEmptyDf(length):
 
     '''
     blank_row = np.zeros(int(length))
-    df = pd.DataFrame({'d16':blank_row,
+    if all_parameters is False:
+        df = pd.DataFrame({'d16':blank_row,
                     'd50':blank_row,
                     'd84':blank_row,
                     'd90':blank_row,
@@ -383,5 +449,67 @@ def fulcrumEmptyDf(length):
                     'bankfull_multiplier':blank_row,
                     'duration':blank_row,
                     'total_sediment_discharge':blank_row})
+    elif all_parameters is True:
+        df = pd.DataFrame({'d16':blank_row,
+                            'd50':blank_row,
+                            'd84':blank_row,
+                            'd90':blank_row,
+                            'mean_foreset_height':blank_row,
+                            'channel_width':blank_row,
+                            'channel_depth':blank_row,
+                            'slope':blank_row,
+                            'mean_flow_velocity':blank_row,
+                            'critical_mobility_parameter':blank_row,
+                            'bankfull_discharge':blank_row,
+                            'bankfull_suspended_discharge':blank_row,
+                            'bankfull_bedload_discharge':blank_row,
+                            'mean_annual_sediment_discharge':blank_row,
+                            'bankfull_interval':blank_row,
+                            'bankfull_multiplier':blank_row,
+                            'duration':blank_row,
+                            'total_sediment_discharge':blank_row,
+                            'tau_bf':blank_row,
+                            'R':blank_row,
+                            'g':blank_row,
+                            'tau_c':blank_row,
+                            'alpha_EH':blank_row,
+                            'nt':blank_row,
+                            'phi_s':blank_row,
+                            'v':blank_row,
+                            's':blank_row,
+                            'c0':blank_row,
+                            'k':blank_row,
+                            'Hbf':blank_row,
+                            'Bbf':blank_row,
+                            'S':blank_row,
+                            'delta':blank_row,
+                            'lam':blank_row,
+                            'psi':blank_row,
+                            'ks':blank_row,
+                            'cf':blank_row,
+                            'alpha_t':blank_row,
+                            'D_st':blank_row,
+                            'm':blank_row,
+                            'u_st_cr':blank_row,
+                            'cz':blank_row,
+                            'Rh':blank_row,
+                            'u_bar':blank_row,
+                            'u_st_p':blank_row,
+                            'T':blank_row,
+                            'sig_s':blank_row,
+                            'Ds':blank_row,
+                            'w_s':blank_row,
+                            'u_st':blank_row,
+                            'a':blank_row,
+                            'Rep':blank_row,
+                            'Zu':blank_row,
+                            'A':blank_row,
+                            'ca':blank_row,
+                            'beta':blank_row,
+                            'phi':blank_row,
+                            'Z':blank_row,
+                            'Zp':blank_row,
+                            'F':blank_row,
+                            })
     
     return df
