@@ -219,14 +219,14 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
         hbf = depth
 
     # Assign channel width
-    try:
-        bbf = wc/1
-    except:
-        if(wc == 'single'):
-            bbf = 8.8 * hbf**1.82
-        elif(wc == 'braid'):
-            bbf = 42 * hbf**1.11
-        else:    
+    if(wc == 'single'):
+        bbf = 8.8 * hbf**1.82
+    elif(wc == 'braid'):
+        bbf = 42 * hbf**1.11
+    else:
+        try:
+            bbf = wc/1
+        except:    
             raise Exception('wc accepts numerical arguments, "single" or "braid" only.')
     
     S = (tau_bf * (R * d50))/hbf
@@ -250,12 +250,12 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
         try:
             lower = np.max(np.where(cmpx <= D_st))
         except:
-            raise Exception(f'D_st too small for chosen critical mobility parameter range. D_st = {D_st}')
+            raise Exception(f'D_st too small for chosen critical mobility parameter range. D_st = {D_st}, minimum D_st value = {min(cmpx)}')
         
         try:
             upper = np.max(np.where(cmpx > D_st))
         except:
-            raise Exception(f'D_st too small for chosen critical mobility parameter range. D_st = {D_st}')
+            raise Exception(f'D_st too large for chosen critical mobility parameter range. D_st = {D_st}, maximum D_st value = {max(cmpx)}')
         a1 = (D_st, 0)
         a2 = (D_st, np.max(cmpy))
         b1 = (cmpx[lower],cmpy[lower])
