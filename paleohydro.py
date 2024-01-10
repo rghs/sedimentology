@@ -110,7 +110,7 @@ def leroux(L):
 
 def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
             grainsize_m = False, hm_hbf = 8, ca_method = 'vr',
-            crit_mob_param = 1, crit_mob_manual = 0,
+            crit_mob_param = 1, crit_mob_manual = 0, bulk_density = 2650,
             all_parameters=False):
     '''
     UNDER CONSTRUCTION
@@ -246,7 +246,7 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
     
     # Construct critical mobility space and select appropriate parameter
     if(crit_mob_manual == 0):
-        cmpx, cmpy = gr.cmp(crit_mob_param)    
+        cmpx, cmpy = gr.cmp(crit_mob_param)
         try:
             lower = np.max(np.where(cmpx <= D_st))
         except:
@@ -299,6 +299,7 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
             Zu = (u_st/w_s) * (Rep**0.6)
         ca = (A * (Zu**5))/(1 + (A/0.3) * (Zu**5))
     elif(ca_method == 'vr'):
+        Rep=np.nan
         A=np.nan
         Zu=np.nan
         # Van Rijn, 1984
@@ -324,6 +325,7 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
     # Qma = 3.102 * Q_bf + 56.581       # Calculate mean annual water discharge (seems wrong, investigate)
     
     Qmas = (Qs + Q_tbf) * tbd * b       # Mean annual sediment discharge (m^3)
+    Qmas_Mt = (Qmas*bulk_density)/1e9
     Qmas_km = Qmas * 1e-9               # Mean annual sediment discharge (km^3)
     
     total_km = Qmas_km * duration
@@ -343,9 +345,10 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
                             'bankfull_discharge':[Q_bf],
                             'bankfull_suspended_discharge':[Qs],
                             'bankfull_bedload_discharge':[Q_tbf],
-                            'mean_annual_sediment_discharge':[Qmas],
                             'bankfull_interval':[tbd],
                             'bankfull_multiplier':[b],
+                            'mean_annual_sediment_discharge':[Qmas],
+                            'annual_sediment_mass_discharge_Mt':[Qmas_Mt],
                             'duration':[duration],
                             'total_sediment_discharge':[total_km]})
     elif all_parameters is True:
@@ -362,9 +365,10 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
                             'bankfull_discharge':[Q_bf],
                             'bankfull_suspended_discharge':[Qs],
                             'bankfull_bedload_discharge':[Q_tbf],
-                            'mean_annual_sediment_discharge':[Qmas],
                             'bankfull_interval':[tbd],
                             'bankfull_multiplier':[b],
+                            'mean_annual_sediment_discharge':[Qmas],
+                            'annual_sediment_mass_discharge_Mt':[Qmas_Mt],
                             'duration':[duration],
                             'total_sediment_discharge':[total_km],
                             'tau_bf':[tau_bf],
@@ -444,9 +448,10 @@ def fulcrumEmptyDf(length, all_parameters=False):
                     'bankfull_discharge':blank_row,
                     'bankfull_suspended_discharge':blank_row,
                     'bankfull_bedload_discharge':blank_row,
-                    'mean_annual_sediment_discharge':blank_row,
                     'bankfull_interval':blank_row,
                     'bankfull_multiplier':blank_row,
+                    'mean_annual_sediment_discharge':blank_row,
+                    'annual_sediment_mass_discharge_Mt':blank_row,
                     'duration':blank_row,
                     'total_sediment_discharge':blank_row})
     elif all_parameters is True:
@@ -463,9 +468,10 @@ def fulcrumEmptyDf(length, all_parameters=False):
                             'bankfull_discharge':blank_row,
                             'bankfull_suspended_discharge':blank_row,
                             'bankfull_bedload_discharge':blank_row,
-                            'mean_annual_sediment_discharge':blank_row,
                             'bankfull_interval':blank_row,
                             'bankfull_multiplier':blank_row,
+                            'mean_annual_sediment_discharge':blank_row,
+                            'annual_sediment_mass_discharge_Mt':blank_row,
                             'duration':blank_row,
                             'total_sediment_discharge':blank_row,
                             'tau_bf':blank_row,
