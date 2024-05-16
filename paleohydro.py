@@ -325,7 +325,7 @@ def fulcrum(d16, d50, d84, d90, sm, duration, tbd, b, wc = 'single', depth = 0,
     # Qma = 3.102 * Q_bf + 56.581       # Calculate mean annual water discharge (seems wrong, investigate)
     
     Qmas = (Qs + Q_tbf) * tbd * b       # Mean annual sediment discharge (m^3)
-    Qmas_Mt = (Qmas*bulk_density)/1e9
+    Qmas_Mt = (Qmas*bulk_density)/1e9   # Simple conversion to convert volume to mass for comparison with BQART (megatonnes)
     Qmas_km = Qmas * 1e-9               # Mean annual sediment discharge (km^3)
     
     total_km = Qmas_km * duration
